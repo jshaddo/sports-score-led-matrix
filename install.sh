@@ -4,7 +4,7 @@
 
 set -e  # Exit on any error
 
-REPO_URL="https://github.com/YOUR_USERNAME/sports-score-led-matrix.git"
+REPO_URL="https://github.com/jshaddo/sports-score-led-matrix.git"
 INSTALL_DIR="$HOME/sports-display"
 
 echo "========================================"
