@@ -22,14 +22,14 @@ Real-time sports score display for Raspberry Pi with 32x128 RGB LED Matrix. Show
 
 SSH into your Raspberry Pi and run:
 ```bash
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/sports-score-led-matrix/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/jshaddo/sports-score-led-matrix/main/install.sh | bash
 ```
 
 **Important:** Replace `YOUR_USERNAME` with your actual GitHub username!
 
 Or clone and install manually:
 ```bash
-git clone https://github.com/YOUR_USERNAME/sports-score-led-matrix.git
+git clone https://github.com/jshaddo/sports-score-led-matrix.git
 cd sports-score-led-matrix
 chmod +x install.sh
 ./install.sh
