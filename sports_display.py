@@ -177,7 +177,7 @@ class SportsScoreDisplay:
             'NW': graphics.Color(78, 42, 132),      # Northwestern Purple
             'MD': graphics.Color(224, 58, 62),      # Maryland Red
             'RUT': graphics.Color(204, 0, 51),      # Rutgers Scarlet
-            
+        
             # College - ACC & Others
             'DUKE': graphics.Color(0, 26, 87),      # Duke Blue
             'UNC': graphics.Color(123, 175, 212),   # UNC Carolina Blue
@@ -196,7 +196,7 @@ class SportsScoreDisplay:
         self.scroll_pos = 0
         self.current_games = []
         self.priority_games = []
-        self.last_priority_scores = {}  # Track scores to detect changes
+        self.last_priority_scores = {}
         
     def fetch_scores(self, sport, league):
         """Fetch live scores from ESPN API"""
@@ -228,12 +228,10 @@ class SportsScoreDisplay:
             
         for event in data['events']:
             try:
-                # Get game status
                 status = event.get('status', {})
                 state = status.get('type', {}).get('state', '')
                 detail = status.get('type', {}).get('shortDetail', '')
                 
-                # Skip completed games unless recent
                 if state == 'post':
                     continue
                     
@@ -241,14 +239,12 @@ class SportsScoreDisplay:
                 competitors = competitions.get('competitors', [])
                 
                 if len(competitors) >= 2:
-                    # Typically [1] is home, [0] is away
                     home = competitors[1]
                     away = competitors[0]
                     
                     home_team_name = home.get('team', {}).get('displayName', '')
                     away_team_name = away.get('team', {}).get('displayName', '')
                     
-                    # Check if this is a priority game
                     is_priority = (self.is_priority_team(home_team_name, league_key) or 
                                  self.is_priority_team(away_team_name, league_key))
                     
@@ -290,7 +286,6 @@ class SportsScoreDisplay:
                 else:
                     all_games.append(game)
         
-        # Priority games come first
         return priority_games, all_games
     
     def check_priority_score_changes(self):
@@ -316,21 +311,17 @@ class SportsScoreDisplay:
         """Draw a single game on the matrix"""
         self.canvas.Clear()
         
-        # League header with priority indicator
         league_color = self.priority_color if game['is_priority'] else self.blue
         graphics.DrawText(self.canvas, self.font_small, 2, 8 + y_offset, 
                          league_color, game['league'])
         
         if game['is_priority']:
-            # Add star indicator for priority games
             graphics.DrawText(self.canvas, self.font_small, 35, 8 + y_offset, 
                              self.yellow, "★")
         
-        # Get team colors
         away_team_color = self.team_colors.get(game['away_team'], self.white)
         home_team_color = self.team_colors.get(game['home_team'], self.white)
         
-        # Parse scores for comparison
         try:
             away_int = int(game['away_score'])
             home_int = int(game['home_score'])
@@ -338,22 +329,19 @@ class SportsScoreDisplay:
             away_int = 0
             home_int = 0
         
-        # Line 1: Away team and score
         graphics.DrawText(self.canvas, self.font_large, 2, 17 + y_offset, 
                          away_team_color, game['away_team'])
         away_score_color = self.green if away_int > home_int else self.white
         graphics.DrawText(self.canvas, self.font_large, 32, 17 + y_offset, 
                          away_score_color, game['away_score'])
         
-        # Line 2: Home team and score
         graphics.DrawText(self.canvas, self.font_large, 2, 25 + y_offset, 
                          home_team_color, game['home_team'])
         home_score_color = self.green if home_int > away_int else self.white
         graphics.DrawText(self.canvas, self.font_large, 32, 25 + y_offset, 
                          home_score_color, game['home_score'])
         
-        # Status on bottom line
-        status_text = game['status'][:20]  # Truncate if too long
+        status_text = game['status'][:20]
         graphics.DrawText(self.canvas, self.font_small, 2, 32 + y_offset, 
                          self.yellow, status_text)
         
@@ -378,25 +366,21 @@ class SportsScoreDisplay:
         
         try:
             while True:
-                # Full refresh based on config
                 if update_counter % FULL_UPDATE_INTERVAL == 0:
                     print(f"Full score refresh... {datetime.now()}")
                     self.priority_games, other_games = self.get_all_games()
                     self.current_games = self.priority_games + other_games
                     print(f"Found {len(self.priority_games)} priority games, {len(other_games)} other games")
                     game_index = 0
-                    self.check_priority_score_changes()  # Initialize tracking
+                    self.check_priority_score_changes()
                 
-                # Quick check for priority game score changes
                 elif self.priority_games and priority_check_counter % PRIORITY_UPDATE_INTERVAL == 0:
                     print("Quick check of priority games...")
                     new_priority_games, _ = self.get_all_games()
                     
                     if new_priority_games:
-                        # Update priority games in the current list
                         for i, game in enumerate(self.current_games):
                             if game['is_priority']:
-                                # Find matching game in new data
                                 for new_game in new_priority_games:
                                     if new_game['id'] == game['id']:
                                         self.current_games[i] = new_game
@@ -404,21 +388,17 @@ class SportsScoreDisplay:
                         
                         self.priority_games = new_priority_games
                         
-                        # Check if scores changed
                         if self.check_priority_score_changes():
-                            # Reset to show priority games immediately
                             game_index = 0
                             print("Priority game score changed! Updating display...")
                 
                 if self.current_games:
-                    # Display each game based on priority from config
                     game = self.current_games[game_index]
                     self.draw_game(game)
                     
                     display_time = PRIORITY_GAME_DISPLAY_TIME if game['is_priority'] else NON_PRIORITY_GAME_DISPLAY_TIME
                     time.sleep(display_time)
                     
-                    # Move to next game
                     game_index = (game_index + 1) % len(self.current_games)
                 else:
                     self.draw_no_games()
